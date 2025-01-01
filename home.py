@@ -52,7 +52,7 @@ def show_home():
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-            st.image("images/goa.jpg", caption="Goa, India", use_container_width=True)
+            st.image("images/lake.jpg", caption="Goa, India", use_container_width=True)
             if st.button("Explore Goa", use_container_width=True):
                 st.session_state["page"] = "Goa"
 
@@ -84,8 +84,6 @@ def show_details(place):
         st.write("Kuttanad is famous for its forested volcanic mountains and iconic beaches...")
     st.button("Back to Home", on_click=lambda: st.session_state.update({"page": "Home"}))
 
-
-# Main Logic
 if "page" not in st.session_state:
     st.session_state["page"] = "Home"
 
