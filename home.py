@@ -1,21 +1,16 @@
 import streamlit as st
 import os
 
-# Set page configuration
 st.set_page_config(page_title="Travel Around the World", layout="wide", page_icon="✈️")
 
-# Load external CSS
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Call the load_css function with the path to style.css
 css_path = os.path.join("css", "homestyle.css")
 load_css(css_path)
 
-# Define routing logic
 def show_home():
-    # Navbar
     st.markdown(
         """
         <header>
@@ -38,7 +33,6 @@ def show_home():
         unsafe_allow_html=True,
     )
 
-    # Hero Section with background image
     st.markdown(
         """
         <div class="hero">
@@ -52,7 +46,6 @@ def show_home():
         unsafe_allow_html=True,
     )
 
-    # Top Destinations Section
     st.markdown("### Top destinations for your next holiday")
     st.markdown("Here's where your fellow travelers are headed")
 
@@ -60,22 +53,22 @@ def show_home():
 
     with col1:
             st.image("images/goa.jpg", caption="Goa, India", use_container_width=True)
-            if st.button("Explore Goa"):
+            if st.button("Explore Goa", use_container_width=True):
                 st.session_state["page"] = "Goa"
 
     with col2:
         st.image("images/kashmir.jpg", caption="Kashmir, India", use_container_width=True)
-        if st.button("Explore Kashmir"):
+        if st.button("Explore Kashmir", use_container_width=True):
             st.session_state["page"] = "Kashmir"
 
     with col3:
         st.image("images/mumbai.jpg", caption="Mumbai, India", use_container_width=True)
-        if st.button("Explore Mumbai"):
+        if st.button("Explore Mumbai", use_container_width=True):
             st.session_state["page"] = "Mumbai"
 
     with col4:
         st.image("images/kuttanad.jpg", caption="Kuttanad, India", use_container_width=True)
-        if st.button("Explore Kuttanad"):
+        if st.button("Explore Kuttanad", use_container_width=True):
             st.session_state["page"] = "Kuttanad"
     
    

@@ -11,6 +11,7 @@ def set_background(image_file):
         .stApp {{
             background-image: url("data:image/jpeg;base64,{data}");
             background-size: cover;
+            background-repeat: no-repeat;
         }}
         </style>
         """,
@@ -20,7 +21,7 @@ def set_background(image_file):
 st.set_page_config(page_title="Signup Page", page_icon="📋")
 
 # Set the background image
-set_background("C:\Users\user\Documents\Travel Navigator\TRAVEL-NAVIGATOR\images\signup.jpg")  # Replace with your image file path
+set_background(r'C:\Users\samee\Documents\projects\TRAVEL-NAVIGATOR\TRAVEL-NAVIGATOR\images\signup.jpg')  # Replace with your image file path
 
 # Signup form
 st.title("Signup Page")
