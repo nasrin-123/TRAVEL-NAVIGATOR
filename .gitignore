@@ -1,0 +1,12 @@
+# Ignore Python bytecode
+travelnavigator/__pycache__/
+
+# Ignore virtual environments
+travelnavigator/venv/
+travelnavigator/myenv/
+
+# Optional: Ignore temporary files or editor configs
+*.pyc
+*.pyo
+*.log
+.DS_Store
