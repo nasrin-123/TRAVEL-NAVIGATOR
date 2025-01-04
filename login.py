@@ -19,7 +19,7 @@ login_container = """
     <p style=""></p> 
     <div class="social-buttons">
         Don't have an account?
-        <a>Sign Up<a/>
+        <a>Sign Up</a>
     </div>
 </div>
 
