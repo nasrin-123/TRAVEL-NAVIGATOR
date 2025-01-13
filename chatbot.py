@@ -9,6 +9,8 @@ from pydub import AudioSegment
 import speech_recognition as sr
 import requests
 from urllib.parse import quote_plus
+import streamlit as st
+from tempfile import NamedTemporaryFile
 
 aai.settings.api_key = os.getenv("ASSEMBLYAI_API_KEY", "e0d4f9ff6644425a82307b882181edfa")
 
@@ -33,12 +35,6 @@ embedding_dim = question_embeddings.shape[1]
 index = faiss.IndexFlatL2(embedding_dim)
 index.add(question_embeddings)
 
-def filter_answers_by_keywords(query, answers, top_k=3):
-    keywords = ['kerala', 'karnataka', 'trip', 'days', 'vacation']
-    query = query.lower()
-    filtered_answers = [answer for answer in answers if any(keyword in answer.lower() for keyword in keywords)]
-    return filtered_answers[:top_k] if filtered_answers else answers[:top_k]
-
 def retrieve_answers(query, top_k=3):
     query_embedding = retriever.encode([query], convert_to_tensor=True).cpu().numpy()
     distances, indices = index.search(query_embedding, top_k)
@@ -52,7 +48,6 @@ def generate_response(query, context_answers):
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 def search_images_unsplash(query, num_images=3):
-    # unsplash_access_key = os.getenv('PsTPz9S5OTm2rCzKwInEfUNuzQAWgM8CjrG9U9hKcwk')
     unsplash_access_key = "PsTPz9S5OTm2rCzKwInEfUNuzQAWgM8CjrG9U9hKcwk"
     query = quote_plus(query)
     search_url = f"https://api.unsplash.com/search/photos?query={query}&client_id={unsplash_access_key}&per_page={num_images}"
@@ -65,10 +60,10 @@ def search_images_unsplash(query, num_images=3):
         print(f"Error fetching images: {e}")
         return []
 
-def upload_and_transcribe_audio():
+def upload_and_transcribe_audio(file_path):
     try:
         wav_file = "converted_audio.wav"
-        audio = AudioSegment.from_file(r'C:\Users\samee\Documents\projects\TRAVEL-NAVIGATOR\TRAVEL-NAVIGATOR\audio.opus')
+        audio = AudioSegment.from_file(file_path)
         audio.export(wav_file, format="wav")
         print(f"File converted to WAV format: {wav_file}")
 
@@ -88,26 +83,47 @@ def rag_chatbot(query):
     image_urls = search_images_unsplash(query)
     return response, image_urls
 
-def chat():
-    print("Chatbot: Hello! You can talk to me via text or voice input. Type 'exit' to quit.")
-    while True:
-        query = input("You (type 'voice' to upload a voice file or type your question): ")
-        if query.lower() in ["exit", "quit", "bye"]:
-            print("Chatbot: Goodbye! Feel free to come back anytime.")
-            break
+st.title("Travel Navigator Chatbot")
+st.markdown("""
+This chatbot helps you plan trips, answer travel-related queries, and even provides image suggestions!
+You can either type your question or upload a voice file for transcription and response.
+""")
 
-        if query.lower() == "voice":
-            query = upload_and_transcribe_audio()
-            if query:
-                print(f"Transcribed query: {query}")
-            else:
-                continue
 
-        response, image_urls = rag_chatbot(query)
-        print("Chatbot:", response)
+input_method = st.radio(
+    "Choose input method:",
+    options=["Text Input", "Voice Input"]
+)
 
-        if image_urls:
-            print("Here are some related images:")
-            for url in image_urls:
-                print(url)
-chat()
+query = None
+
+if input_method == "Text Input":
+    query = st.text_input("Type your question here:")
+elif input_method == "Voice Input":
+    uploaded_file = st.file_uploader("Upload your voice file (e.g., .wav, .opus):")
+    if uploaded_file is not None:
+        with NamedTemporaryFile(delete=False, suffix=".opus") as temp_file:
+            temp_file.write(uploaded_file.read())
+            temp_file_path = temp_file.name
+        st.write("Processing uploaded file...")
+        query = upload_and_transcribe_audio(temp_file_path)  # Use your existing function
+        if query:
+            st.success(f"Transcribed Query: {query}")
+        else:
+            st.error("Could not process the uploaded file.")
+
+if query:
+    if st.button("Get Response"):
+        with st.spinner("Generating response..."):
+            response, image_urls = rag_chatbot(query)
+            st.subheader("Chatbot Response:")
+            st.write(response)
+
+            if image_urls:
+                st.subheader("Related Images:")
+                for url in image_urls:
+                    st.image(url, use_column_width=True)
+
+
+st.markdown("---")
+st.caption("Powered by Streamlit, AssemblyAI, and Unsplash API.")
