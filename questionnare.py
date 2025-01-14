@@ -94,35 +94,74 @@ st.sidebar.header("User Information")
 
 # User ID
 user_id = st.sidebar.text_input("Enter your User ID", "")
+#NEW///////////////
+# Dropdown menu for Indian states
+indian_states = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", 
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", 
+    "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", 
+    "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", 
+    "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", 
+    "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", 
+    "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", 
+    "Ladakh", "Lakshadweep", "Puducherry"
+]
 
-# Destination selection
+# Destination selection with a dropdown
 st.header("Choose Your Destination")
-destination_query = st.text_input("Select State", "")
-if st.button("Search Destination"):
-    if destination_query:
-        results = search_documents(destination_query)
-        if results:
-            st.write("Top Recommendations:")
-            for res in results:
-                st.write(f"**Destination:** {res['question']}")
-                st.write(f"**Description:** {res['answer']}")
-        else:
-            st.warning("No results found.")
-    else:
-        st.error("Please enter a search query.")
+destination_query = st.selectbox("Select State", indian_states, index=0)
 
-destination = st.text_input("Or enter your destination manually:", "")
-if st.button("Save Destination"):
-    if user_id and destination:
-        users_collection.update_one(
-            {"user_id": user_id},
-            {"$set": {"destination": destination}},
-            upsert=True
-        )
-        st.success("Destination saved successfully!")
+# Initialize session state
+if "rec_index" not in st.session_state:
+    st.session_state.rec_index = 0
+    st.session_state.recommendations = []
+    st.session_state.selected_recommendation = None
+
+# Button to get initial recommendations
+if st.button("Get Recommendations"):
+    if destination_query:
+        st.session_state.recommendations = search_documents(destination_query)
+        st.session_state.rec_index = 0  # Reset index
+        st.session_state.selected_recommendation = None  # Clear any previous selection
+        if st.session_state.recommendations:
+            rec = st.session_state.recommendations[st.session_state.rec_index]
+            st.write(f"**Destination:** {rec['question']}")
+            st.write(f"**Description:** {rec['answer']}")
+            if st.button(f"Select Recommendation: {rec['question']}"):
+                st.session_state.selected_recommendation = rec['question']
+        else:
+            st.warning("No recommendations found.")
     else:
-        st.error("Please enter both User ID and Destination.")
-        
+        st.error("Please select a state.")
+
+# Button to get more recommendations
+if st.session_state.recommendations and st.session_state.rec_index < len(st.session_state.recommendations) - 1:
+    if st.button("Show More Recommendations"):
+        st.session_state.rec_index += 1
+        rec = st.session_state.recommendations[st.session_state.rec_index]
+        st.write(f"**Destination:** {rec['question']}")
+        st.write(f"**Description:** {rec['answer']}")
+        if st.button(f"Select Recommendation: {rec['question']}"):
+            st.session_state.selected_recommendation = rec['question']
+elif st.session_state.recommendations:
+    st.info("No more recommendations available.")
+
+# Display Save Destination button if a recommendation is selected
+if st.session_state.selected_recommendation:
+    st.success(f"You have selected: {st.session_state.selected_recommendation}")
+    if st.button("Save Destination"):
+        if "user_id" in st.session_state and st.session_state.selected_recommendation:
+            users_collection.update_one(
+                {"user_id": st.sidebar.text_input("Enter your User ID", "")},
+                {"$set": {"destination": st.session_state.selected_recommendation}},
+                upsert=True
+            )
+            st.success("Destination saved successfully!")
+        else:
+            st.error("Please provide your User ID.")
+
+
+#NEW////////////////
 # Date selection
 st.header("Select Your Dates")
 start_date = st.date_input("Start Date", value=datetime.now())
