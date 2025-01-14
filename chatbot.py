@@ -24,7 +24,7 @@ def load_dataset(file_path):
         print(f"Error loading dataset: {e}")
         return [], []
 
-questions, answers = load_dataset(r'C:\Users\samee\Documents\projects\TRAVEL-NAVIGATOR\TRAVEL-NAVIGATOR\travelnavigator\dataset (1).csv')
+questions, answers = load_dataset(r'C:\Users\himaj\OneDrive\Desktop\TRAVEL-NAVIGATOR\travelnavigator\dataset (1).csv')
 
 retriever = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 tokenizer = AutoTokenizer.from_pretrained("facebook/bart-large-cnn")
