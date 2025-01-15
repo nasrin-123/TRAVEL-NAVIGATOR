@@ -34,7 +34,6 @@ documents = []
 
 def load_dataset(file_path):
     try:
-        #st.info("Loading dataset...")
         data = pd.read_csv(file_path)
         questions = data['QUESTIONS'].tolist()
         answers = data['ANSWERS'].tolist()
@@ -46,11 +45,9 @@ def load_dataset(file_path):
 def index_documents(questions, answers):
     global embeddings, documents
     try:
-        #st.info("Indexing documents...")
         document_embeddings = embedding_model.encode(answers, convert_to_tensor=True)
         documents = [{"question": q, "answer": a} for q, a in zip(questions, answers)]
         embeddings = document_embeddings
-        #st.success("Documents indexed successfully!")
     except Exception as e:
         st.error(f"An error occurred during indexing: {e}")
 
@@ -65,16 +62,28 @@ def search_documents(query, top_k=5):
         st.error(f"An error occurred during search: {e}")
         return []
 
-# Image analysis function
+def get_rag_response(query):
+    retrieved_results = search_documents(query, top_k=5)
+    if not retrieved_results:
+        return "No relevant recommendations found. Please try a different query."
+
+    context = "\n".join([f"- {res['answer']}" for res in retrieved_results])
+    prompt = (
+        f"You are a travel assistant. Based on the following information, "
+        f"recommend the best destination:\n{context}\n"
+        f"Provide a single concise recommendation."
+    )
+    response = llm.ask(prompt)
+    return response
+
 def analyze_image(uploaded_file):
     try:
-        model = vgg16.VGG16(weights="imagenet")  # Load pre-trained VGG16 model
+        model = vgg16.VGG16(weights="imagenet")
         img = image.load_img(uploaded_file, target_size=(224, 224))
         img_array = image.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0)
         img_array = preprocess_input(img_array)
 
-        # Predict the content of the image
         predictions = model.predict(img_array)
         decoded_predictions = decode_predictions(predictions, top=3)
         return [f"{label}: {round(prob * 100, 2)}%" for _, label, prob in decoded_predictions[0]]
@@ -94,7 +103,8 @@ st.sidebar.header("User Information")
 
 # User ID
 user_id = st.sidebar.text_input("Enter your User ID", "")
-#NEW///////////////
+
+# Destination Recommendations
 # Dropdown menu for Indian states
 indian_states = [
     "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", 
@@ -150,9 +160,9 @@ elif st.session_state.recommendations:
 if st.session_state.selected_recommendation:
     st.success(f"You have selected: {st.session_state.selected_recommendation}")
     if st.button("Save Destination"):
-        if "user_id" in st.session_state and st.session_state.selected_recommendation:
+        if user_id:
             users_collection.update_one(
-                {"user_id": st.sidebar.text_input("Enter your User ID", "")},
+                {"user_id": user_id},
                 {"$set": {"destination": st.session_state.selected_recommendation}},
                 upsert=True
             )
@@ -160,8 +170,8 @@ if st.session_state.selected_recommendation:
         else:
             st.error("Please provide your User ID.")
 
+# Additional sections (Dates, Trip Type, Interests, Image Analysis) remain unchanged
 
-#NEW////////////////
 # Date selection
 st.header("Select Your Dates")
 start_date = st.date_input("Start Date", value=datetime.now())
